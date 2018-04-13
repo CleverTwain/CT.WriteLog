@@ -38,8 +38,8 @@
             "suppressTaskName": true,
             "showOutput": "always",
             "args": [
-                "Write-Host 'Invoking psake on build.psake.ps1 -taskList Clean'; Invoke-psake build.psake.ps1 -taskList Clean;",
-                "Invoke-Command { Write-Host 'Completed Clean task in task runner.' }"
+                "Write-Host 'Running . .\\build.ps1 -Task Clean' ; . .\\build.ps1 -Task Clean;",
+                "Invoke-Command { Write-Host 'Completed Build task in task runner.' }"
             ]
         },
         {
@@ -48,7 +48,7 @@
             "isBuildCommand": true,
             "showOutput": "always",
             "args": [
-                "Write-Host 'Running . .\\build.ps1' ; . .\\build.ps1;",
+                "Write-Host 'Running . .\\build.ps1' -Task Build ; . .\\build.ps1 -Task Build ;",
                 "Invoke-Command { Write-Host 'Completed Build task in task runner.' }"
             ]
         },
@@ -57,8 +57,8 @@
             "suppressTaskName": true,
             "showOutput": "always",
             "args": [
-                "Write-Host 'Invoking psake on ct.writelog\build.psake.ps1 -taskList BuildHelp'; Invoke-psake build.psake.ps1 -taskList BuildHelp;; Invoke-psake build.psake.ps1 -taskList BuildUpdatableHelp; ",
-                "Invoke-Command { Write-Host 'Completed BuildHelp task in task runner.' }"
+                "Write-Host 'Running . .\\build.ps1' -Task BuildAllHelp ; . .\\build.ps1 -Task BuildAllHelp ;",
+                "Invoke-Command { Write-Host 'Completed BuildAllHelp task in task runner.' }"
             ]
         },
         {
@@ -80,11 +80,20 @@
             ]
         },
         {
+            "taskName": "BuildAndPublish",
+            "suppressTaskName": true,
+            "showOutput": "always",
+            "args": [
+                "Write-Host 'Running . .\\build.ps1 -task BuildAndPublish' ; . .\\build.ps1 -task BuildAndPublish;",
+                "Invoke-Command { Write-Host 'Completed BuildAndPublish task in task runner.' }"
+            ]
+        },
+        {
             "taskName": "Analyze",
             "suppressTaskName": true,
             "showOutput": "always",
             "args": [
-                "Write-Host 'Invoking psake on build.psake.ps1 -taskList Analyze'; Invoke-psake build.psake.ps1 -taskList Analyze;",
+                "Write-Host 'Running . .\\build.ps1 -task Analyze' ; . .\\build.ps1 -task Analyze;",
                 "Invoke-Command { Write-Host 'Completed Analyze task in task runner.' }"
             ]
         },
@@ -93,7 +102,7 @@
             "suppressTaskName": true,
             "showOutput": "always",
             "args": [
-                "Write-Host 'Invoking psake on build.psake.ps1 -taskList Install'; Invoke-psake build.psake.ps1 -taskList Install;",
+                "Write-Host 'Running . .\\build.ps1 -task Install' ; . .\\build.ps1 -task Install;",
                 "Invoke-Command { Write-Host 'Completed Install task in task runner.' }"
             ]
         },
@@ -102,7 +111,7 @@
             "suppressTaskName": true,
             "showOutput": "always",
             "args": [
-                "Write-Host 'Invoking psake on build.psake.ps1 -taskList Publish'; Invoke-psake build.psake.ps1 -taskList Publish;",
+                "Write-Host 'Running . .\\build.ps1 -task Publish' ; . .\\build.ps1 -task Publish;",
                 "Invoke-Command { Write-Host 'Completed Publish task in task runner.' }"
             ]
         },
@@ -112,7 +121,17 @@
             "isTestCommand": true,
             "showOutput": "always",
             "args": [
-                "Write-Host 'Invoking Pester'; Invoke-Pester -PesterOption @{IncludeVSCodeMarker=$true};",
+                "Write-Host 'Running . .\\build.ps1 -task Pester' ; . .\\build.ps1 -task Pester;",
+                "Invoke-Command { Write-Host 'Completed Pester task in task runner.' }"
+            ]
+        },
+        {
+            "taskName": "TestNotUsed",
+            "suppressTaskName": true,
+            "isTestCommand": true,
+            "showOutput": "always",
+            "args": [
+                "Write-Host 'Invoking Pester'; Invoke-Pester -Path Tests\\*unit* -PesterOption @{IncludeVSCodeMarker=$true};",
                 "Invoke-Command { Write-Host 'Completed Test task in task runner.' }"
             ],
             "problemMatcher": [

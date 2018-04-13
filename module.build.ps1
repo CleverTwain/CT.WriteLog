@@ -20,6 +20,16 @@ Task Build InstallSUT, CopyToOutput, BuildPSM1, BuildPSD1
 Task Pester Build, UnitTests, FullTests
 Task BuildHelp Build, GenerateMarkdown, GenerateHelpFiles
 Task BuildUpdatableHelp BuildHelp, CoreBuildUpdatableHelp
+Task BuildAllHelp BuildHelp, BuildUpdatableHelp
+
+
+Task Analyze {
+    Write-Output "The Analyze... it does nothing!"
+}
+
+Task Install {
+    Write-Output "The Install... it does nothing!  At some point, it may copy the module to a default module location"
+}
 
 function CalculateFingerprint {
     param(
