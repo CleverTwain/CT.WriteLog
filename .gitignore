@@ -1,6 +1,6 @@
 ## Ignore the Variables.csv file to keep from exposing
 ## confidential information
-CT.WriteLog/[Ll]ib/Variables.csv
+CT.WriteLog/[Pp]rivate/Variables.csv
 
 ## Ignore private deployment settings
 private.PSDeploy.ps1

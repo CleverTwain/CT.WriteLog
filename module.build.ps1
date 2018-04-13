@@ -6,6 +6,7 @@ $script:Destination = Join-Path $Output $ModuleName
 $script:ModulePath = "$Destination\$ModuleName.psm1"
 $script:ManifestPath = "$Destination\$ModuleName.psd1"
 $script:Imports = ( 'private', 'public', 'classes' )
+$script:VariablesPath = Join-Path $PSScriptRoot "$ModuleName\private\Variables.csv"
 $script:TestFile = "$PSScriptRoot\output\TestResults_PS$PSVersion`_$TimeStamp.xml"
 $script:DocsRootDir = Join-Path $PSScriptRoot docs
 $script:DefaultLocale = 'en-US'
@@ -21,7 +22,6 @@ Task Pester Build, UnitTests, FullTests
 Task BuildHelp Build, GenerateMarkdown, GenerateHelpFiles
 Task BuildUpdatableHelp BuildHelp, CoreBuildUpdatableHelp
 Task BuildAllHelp BuildHelp, BuildUpdatableHelp
-
 
 Task Analyze {
     Write-Output "The Analyze... it does nothing!"
@@ -196,6 +196,31 @@ Task CopyToOutput {
 Task BuildPSM1 -Inputs (Get-Item "$source\*\*.ps1") -Outputs $ModulePath {
 
     [System.Text.StringBuilder]$stringbuilder = [System.Text.StringBuilder]::new()
+
+    # Checking for variables first...
+    if (Test-Path $VariablesPath) {
+        $ModuleVariables = Import-Csv -Path $VariablesPath
+        foreach ($Item in $ModuleVariables) {
+            # Convert string versions of true and false to boolean versions if needed
+
+            switch ($ExecutionContext.InvokeCommand.ExpandString($Item.Value)) {
+                'true' {
+                    $Line = "New-Variable -Name ""$($Item.VariableName)"" -Value `$true -Scope $($Item.Scope)"
+                }
+                'false' {
+                    $Line = "New-Variable -Name ""$($Item.VariableName)"" -Value `$false -Scope $($Item.Scope)"
+                }
+                default {
+                    $Line = "New-Variable -Name ""$($Item.VariableName)"" -Value ""$($Item.Value)"" -Scope $($Item.Scope)"
+                }
+            }
+
+            [void]$stringbuilder.AppendLine($Line)
+
+            # I don't know if these should be added to the module manifest :(
+        }
+    }
+
     foreach ($folder in $imports )
     {
         [void]$stringbuilder.AppendLine( "Write-Verbose 'Importing from [$Source\$folder]'" )
