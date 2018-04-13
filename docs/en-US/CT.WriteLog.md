@@ -1,7 +1,7 @@
 ---
 Module Name: CT.WriteLog
 Module Guid: d2e6fb53-f02c-4001-8a9d-19b32c886549
-Download Help Link: https://github.com/CleverTwain/CT.WriteLog/tree/master/docs/UpdatableHelp
+Download Help Link: https://github.com/CleverTwain/CT.WriteLog/tree/master/docs/en-US/OfflineHelp
 Help Version: 1.0.0.0
 Locale: en-US
 ---

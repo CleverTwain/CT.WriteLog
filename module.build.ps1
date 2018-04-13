@@ -9,12 +9,13 @@ $script:Imports = ( 'private', 'public', 'classes' )
 $script:TestFile = "$PSScriptRoot\output\TestResults_PS$PSVersion`_$TimeStamp.xml"
 $script:DocsRootDir = Join-Path $PSScriptRoot docs
 $script:DefaultLocale = 'en-US'
-$script:UpdatableHelpOutDir = Join-Path $DocsRootDir UpdatableHelp
+$script:UpdatableHelpOutDir = Join-Path "$DocsRootDir\$DefaultLocale" OfflineHelp
 $script:ModuleOutDir = $ModuleName
 $global:SUTPath = $script:ManifestPath
 
 Task Init SetAsLocal, InstallSUT
 Task Default Build, Pester, Publish
+Task BuildAndPublish Build, Pester, Publish
 Task Build InstallSUT, CopyToOutput, BuildPSM1, BuildPSD1
 Task Pester Build, UnitTests, FullTests
 Task BuildHelp Build, GenerateMarkdown, GenerateHelpFiles
@@ -308,7 +309,7 @@ Task UpdateSource {
     Copy-Item $ManifestPath -Destination "$source\$ModuleName.psd1"
 }
 
-Task Publish {
+Task PublishOld {
     # Gate deployment
     if (
         $ENV:BHBuildSystem -ne 'Unknown' -and
@@ -317,7 +318,7 @@ Task Publish {
     )
     {
         $Params = @{
-            Path  = $BuildRoot
+            Path  = "$BuildRoot\deploy.PSDeploy.ps1"
             Force = $true
         }
 
@@ -326,8 +327,51 @@ Task Publish {
     else
     {
         "Skipping deployment: To deploy, ensure that...`n" +
+        "`t* Just so you know, the path is $BuildRoot`n" +
         "`t* You are in a known build system (Current: $ENV:BHBuildSystem)`n" +
         "`t* You are committing to the master branch (Current: $ENV:BHBranchName) `n" +
+        "`t* Your commit message includes !deploy (Current: $ENV:BHCommitMessage)"
+    }
+}
+
+Task Publish {
+    # Gate deployment
+    if ( $ENV:BHCommitMessage -match '!deploy' ) {
+        Write-Output 'Picked up the !deploy command'
+
+        # Build Params
+        $Params = @{
+            Force = $true
+            Tags = @()
+        }
+
+        switch ($ENV:BHBranchName) {
+            'master' {
+                Write-Output 'Adding the "prod" tag to the deployment options'
+                $Params.Tags += "prod"
+            }
+            'develop' {
+                Write-Output 'Adding the "dev" tag to the deployment options'
+                $Params.Tags += "dev"
+            }
+        }
+
+        if ( $ENV:BHBuildSystem -ne 'Unknown' ) {
+            Write-Output 'We are using a known build system... Setting path accordingly'
+            $Params.Path = $BuildRoot
+        } else {
+            Write-Output 'We are NOT using a known build system, so we are probably deploying privately. Updating path'
+            $Params.Path = "$BuildRoot\private.PSDeploy.ps1"
+        }
+    }
+
+    Write-Output "Verifying parameters"
+    if ( (Test-Path -Path $Params.Path) -and ($Params.Tags -in @('prod','dev')) ) {
+        Invoke-PSDeploy @Verbose @Params
+    } else {
+        "Skipping deployment: To deploy, ensure that...`n" +
+        "`t* The Path parameter resolves to an actual path (Current: $($Params.Path))`n" +
+        "`t* You are committing to the master or develop branch (Current: $ENV:BHBranchName) `n" +
         "`t* Your commit message includes !deploy (Current: $ENV:BHCommitMessage)"
     }
 }

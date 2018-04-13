@@ -48,7 +48,7 @@
             "isBuildCommand": true,
             "showOutput": "always",
             "args": [
-                "Write-Host 'Invoking psake on build.psake.ps1 -taskList Build'; Invoke-psake build.psake.ps1 -taskList Build;",
+                "Write-Host 'Running . .\\build.ps1' ; . .\\build.ps1;",
                 "Invoke-Command { Write-Host 'Completed Build task in task runner.' }"
             ]
         },
@@ -66,7 +66,7 @@
             "suppressTaskName": true,
             "showOutput": "always",
             "args": [
-                "Write-Host 'Invoking psake on ct.writelog\build.psake.ps1 -taskList BuildHelp'; Invoke-psake build.psake.ps1 -taskList BuildHelp;",
+                "Write-Host 'Running . .\\build.ps1 -task BuildHelp' ; . .\\build.ps1 -task BuildHelp;",
                 "Invoke-Command { Write-Host 'Completed BuildHelp task in task runner.' }"
             ]
         },
@@ -75,7 +75,7 @@
             "suppressTaskName": true,
             "showOutput": "always",
             "args": [
-                "Write-Host 'Invoking psake on ct.writelog\build.psake.ps1 -taskList BuildUpdatableHelp'; Invoke-psake build.psake.ps1 -taskList BuildUpdatableHelp;",
+                "Write-Host 'Running . .\\build.ps1 -task BuildUpdatableHelp' ; . .\\build.ps1 -task BuildUpdatableHelp;",
                 "Invoke-Command { Write-Host 'Completed BuildUpdatableHelp task in task runner.' }"
             ]
         },
