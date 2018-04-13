@@ -1,0 +1,19 @@
+site_name: CT.WriteLog Docs
+repo_url: https://github.com/CleverTwain/CT.WriteLog
+theme: readthedocs
+pages:
+  - Home: index.md
+  - CT.WriteLog Basics:
+    - What is CT.WriteLog: about.md
+    - Overview: en-US/CT.WriteLog.md
+    - Quick Start: Quick-Start-Installation-and-Example.md
+  - Commands:
+    - New-Log: en-US/New-Log.md
+    - Show-Log: en-US/Show-Log.md
+    - Write-Log: en-US/Write-Log.md
+  - Examples:
+    - CMTrace: Example-CMTrace.md
+    - PlainText: Example-PlainText.md
+    - Minimal: Example-Minimal.md
+    - EventLog: Example-EventLog.md
+  - Acknowledgements: acknowledgements.md

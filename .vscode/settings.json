@@ -1,0 +1,33 @@
+// Place your settings in this file to overwrite default and user settings.
+{
+    "editor.wordWrap": "off",
+    "editor.wordWrapColumn": 115,
+    "editor.wrappingIndent": "indent",
+    "files.defaultLanguage": "powershell",
+    "workbench.iconTheme": "vscode-icons",
+    "editor.fontFamily": "Inconsolata, 'Lucidia Console', 'Courier New', monospace",
+    "git.enableSmartCommit": true,
+    "git.confirmSync": false,
+    "git.autofetch": true,
+    "terminal.integrated.fontFamily": "Inconsolata, 'Lucidia Console', 'Courier New', monospace",
+    "files.autoSave": "afterDelay",
+    "terminal.integrated.shell.windows": "C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+    "material-icon-theme.showUpdateMessage": false,
+    "explorer.confirmDragAndDrop": false,
+    "files.trimTrailingWhitespace": true,
+    "markdown-pdf.format": "Letter",
+
+    "powershell.codeFormatting.openBraceOnSameLine": false,
+    "powershell.codeFormatting.newLineAfterOpenBrace": true,
+    "powershell.codeFormatting.preset": "Allman",
+    "editor.formatOnSave": true,
+    "editor.insertSpaces": true,
+    "editor.tabSize": 4,
+    "[json]": {
+      "editor.tabSize": 4
+    },
+    "[xml]": {
+      "editor.tabSize": 4
+    },
+    "powershell.scriptAnalysis.settingsPath": ".vscode/PSScriptAnalyzerSettings.psd1"
+  }
