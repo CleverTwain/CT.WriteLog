@@ -14,6 +14,7 @@ node('master') {
       git url: Globals.GitRepo
     }
     stage('Stage 1: Clean') {
+        . build.ps1
       posh 'Invoke-Build Clean'
     }
     stage('Stage 2: Analyze') {
