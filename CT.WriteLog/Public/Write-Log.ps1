@@ -1,4 +1,5 @@
-Function Write-Log {
+Function Write-Log
+{
     <#
         .SYNOPSIS
             Write to the log and back to the host by default.
@@ -55,20 +56,23 @@ Function Write-Log {
         [Parameter(ValueFromPipeline)]
         [ValidateNotNullorEmpty()]
         [Alias('LogFile')]
-        [object] $Log = $Script:PSLOG,
+        [object] $Log = $Global:PSLOG,
 
         # PassThru passes the log entry to the pipeline for further processing.
         [Parameter()]
         [switch] $PassThru
     )
-    Begin {
+    Begin
+    {
         Write-Verbose "[$((Get-Date).TimeofDay) BEGIN  ] Starting $($myinvocation.mycommand)"
 
-        if ( (!$Log.HostWriteBack) -or ($NoHostWriteBack)) {
+        if ( (!$Log.HostWriteBack) -or ($NoHostWriteBack))
+        {
             $NoHostWriteBack = $true
         }
 
-        if ( ($Log.IncludeStreamName) -or ($IncludeStreamName)) {
+        if ( ($Log.IncludeStreamName) -or ($IncludeStreamName))
+        {
             $IncludeStreamName = $true
         }
 
@@ -77,30 +81,37 @@ Function Write-Log {
 
 
     } #begin
-    Process {
+    Process
+    {
         Write-Verbose "[$((Get-Date).TimeofDay) PROCESS] $LogEntry  "
 
-        try {
+        try
+        {
 
             # get information from log object
             $logObject = $Log
 
             Write-Verbose "Received the log object of type $($logObject.Type)"
 
-            if ($logObject.Format) {
+            if ($logObject.Format)
+            {
                 Write-Debug "LogFormat: $($LogObject.Format)"
             }
 
             # translate event types to CMTrace types, and gather information for error
-            if ($logObject.Format -eq 'CMTrace' -or $logObject.Type -eq 'EventLog') {
-                switch ($LogType) {
-                    'Error' {
+            if ($logObject.Format -eq 'CMTrace' -or $logObject.Type -eq 'EventLog')
+            {
+                switch ($LogType)
+                {
+                    'Error'
+                    {
                         $cmType = '3'
 
                         #Get the info about the calling script, function etc
                         $CallingInfo = (Get-PSCallStack)[1]
 
-                        if (!$LogEntry.Exception.Message) {
+                        if (!$LogEntry.Exception.Message)
+                        {
                             [System.Exception]$Exception = $LogEntry
                             [String]$ErrorID = 'Custom Error'
                             [System.Management.Automation.ErrorCategory]$ErrorCategory = [Management.Automation.ErrorCategory]::WriteError
@@ -114,7 +125,9 @@ Function Write-Log {
                             "`nLine Number: $($Callinginfo.ScriptLineNumber)" +
                             "`nColumn Number: $($Callinginfo.Position.StartColumnNumber)" +
                             "`nLine: $($Callinginfo.Position.StartScriptPosition.Line)"
-                        } else {
+                        }
+                        else
+                        {
                             $LogEntry =
                             "$([String]$LogEntry.Exception.Message)`r`r`n" +
                             "`nCommand: $($LogEntry.InvocationInfo.MyCommand)" +
@@ -123,26 +136,79 @@ Function Write-Log {
                             "`nColumn Number: $($LogEntry.InvocationInfo.OffsetInLine)" +
                             "`nLine: $($LogEntry.InvocationInfo.Line)"
                         }
+                        if ( ($logObject.DefaultErrorEventID) -and ([system.string]::IsNullOrEmpty($EventID)) )
+                        {
+                            $EventID = $logObject.DefaultErrorEventID
+                        }
 
                     }
-                    'FailureAudit' {$cmType = '3'}
-                    'Information' {$cmType = '6'}
-                    'SuccessAudit' {$cmType = '4'}
-                    'Warning' {$cmType = '2'}
-                    'Verbose' {$cmType = '4'}
-                    'Debug' {$cmType = '5'}
+                    'FailureAudit'
+                    {
+                        $cmType = '3'
+                        if ( ($logObject.DefaultFailureAuditEventID) -and ([system.string]::IsNullOrEmpty($EventID)) )
+                        {
+                            $EventID = $logObject.DefaultFailureAuditEventID
+                        }
+                    }
+                    'Information'
+                    {
+                        $cmType = '6'
+                        if ( ($logObject.DefaultInformationalEventID) -and ([system.string]::IsNullOrEmpty($EventID)) )
+                        {
+                            $EventID = $logObject.DefaultInformationalEventID
+                        }
+                    }
+                    'SuccessAudit'
+                    {
+                        $cmType = '4'
+                        if ( ($logObject.DefaultSuccessAuditEventID) -and ([system.string]::IsNullOrEmpty($EventID)) )
+                        {
+                            $EventID = $logObject.DefaultSuccessAuditEventID
+                        }
+                    }
+                    'Warning'
+                    {
+                        $cmType = '2'
+                        if ( ($logObject.DefaultWarningEventID) -and ([system.string]::IsNullOrEmpty($EventID)) )
+                        {
+                            $EventID = $logObject.DefaultWarningEventID
+                        }
+                    }
+                    'Verbose'
+                    {
+                        $cmType = '4'
+                        if ( ($logObject.DefaultVerboseEventID) -and ([system.string]::IsNullOrEmpty($EventID)) )
+                        {
+                            $EventID = $logObject.DefaultVerboseEventID
+                        }
+                    }
+                    'Debug'
+                    {
+                        $cmType = '5'
+                        if ( ($logObject.DefaultDebugEventID) -and ([system.string]::IsNullOrEmpty($EventID)) )
+                        {
+                            $EventID = $logObject.DefaultDebugEventID
+                        }
+                    }
                     DEFAULT {$cmType = '1'}
                 }
                 Write-Debug "$LogType : $cmType"
             }
 
-            if ($logObject.Type -eq 'EventLog') {
+            if ($logObject.Type -eq 'EventLog')
+            {
                 # if EventID is not specified use default event id from the log object
-                if([system.string]::IsNullOrEmpty($EventID)) {
+                if ([system.string]::IsNullOrEmpty($EventID))
+                {
+                    switch ($LogType)
+                    {
+                        'Information' { $EventID = $logObject.DefaultInformationalEventID }
+                    }
                     $EventID = $logObject.DefaultEventID
                 }
 
-                if ($LogType -notin ('Error','FailureAudit','SuccessAudit','Warning')) {
+                if ($LogType -notin ('Error', 'FailureAudit', 'SuccessAudit', 'Warning'))
+                {
                     $LogType = 'Information'
                 }
 
@@ -157,7 +223,8 @@ Function Write-Log {
                 Write-EventLog -LogName $logObject.Name -Source $logObject.Source -EntryType $LogType -EventId $EventID -Message $LogEntryString -Verbose
             }
 
-            else {
+            else
+            {
                 $DateTime = New-Object -ComObject WbemScripting.SWbemDateTime
                 $DateTime.SetVarDate($(Get-Date))
                 $UtcValue = $DateTime.Value
@@ -167,29 +234,35 @@ Function Write-Log {
                 $Time = "$(Get-Date -Format HH:mm:ss.fff)$($UtcOffset)"
 
                 # handle the different log file formats
-                switch ($logObject.Format) {
+                switch ($logObject.Format)
+                {
 
                     'Minimal' { $logEntryString = $LogEntry}
 
-                    'PlainText' {
+                    'PlainText'
+                    {
                         $logEntryString = "$Date $Time"
-                        if ($IncludeStreamName) {
+                        if ($IncludeStreamName)
+                        {
                             $LogEntryString = "$logEntryString $($LogType.ToUpper()):"
                         }
                         $LogEntryString = "$LogEntryString $($LogEntry)"
                     }
 
-                    'CMTrace' {
+                    'CMTrace'
+                    {
 
                         # Get invocation information about the script/function/module that called us
                         $thisInvocation = (Get-Variable -Name 'MyInvocation' -Scope 2).Value
 
                         # get calling script info
-                        if(-not ($thisInvocation.ScriptName)){
+                        if (-not ($thisInvocation.ScriptName))
+                        {
                             $scriptName = $thisInvocation.MyCommand
                             $Source = "$($scriptName)"
                         }
-                        else{
+                        else
+                        {
                             $scriptName = Split-Path -Leaf ($thisInvocation.ScriptName)
                             $Source = "$($scriptName):$($thisInvocation.ScriptLineNumber)"
                         }
@@ -201,14 +274,18 @@ Function Write-Log {
 
                         $Source = (Get-PSCallStack)[1].Location
 
-                        if ( (Get-PSCallStack)[1].FunctionName ) {
+                        if ( (Get-PSCallStack)[1].FunctionName )
+                        {
                             $Component = (Get-PSCallStack)[1].FunctionName
-                        } else {
+                        }
+                        else
+                        {
                             $Component = (Get-PSCallStack)[1].Command
                         }
 
                         #Set Component Information
-                        if ($Source -eq '<No file>') {
+                        if ($Source -eq '<No file>')
+                        {
                             $Source = (Get-Process -Id $PID).ProcessName
                         }
 
@@ -241,18 +318,24 @@ Function Write-Log {
                     }
                 }
                 #>
-                While ($PendingWrite -and ($Counter -lt $MaxLoops)) {
+                While ($PendingWrite -and ($Counter -lt $MaxLoops))
+                {
                     $Mutex = New-Object System.Threading.Mutex($false, "LoggingMutex")
                     Write-Debug "Requesting mutex to write to log"
                     [void]$Mutex.WaitOne(1000)
                     Write-Debug "Received Mutex to write to log"
-                    Try {
+                    Try
+                    {
                         Add-Content -Path $logObject.Path -Value $logEntryString -ErrorAction Stop
                         $PendingWrite = $false
-                    } Catch {
+                    }
+                    Catch
+                    {
                         $Counter++
                         Write-Debug $_
-                    } Finally {
+                    }
+                    Finally
+                    {
                         Write-Debug "Releasing Mutex to access log"
                         [void]$Mutex.ReleaseMutex()
                     }
@@ -261,27 +344,32 @@ Function Write-Log {
 
 
                 # invoke log rotation if log is file
-                if ($logObject.LogType -eq 'LogFile') {
+                if ($logObject.LogType -eq 'LogFile')
+                {
                     $logObject | Invoke-LogRotation
                 }
             }
         }
 
-        catch {
+        catch
+        {
             Write-Warning $_.Exception.Message
         }
 
     } #process
-    End {
+    End
+    {
         Write-Verbose "[$((Get-Date).TimeofDay) END    ] Ending $($myinvocation.mycommand)"
 
-        if (!$NoHostWriteBack) {
+        if (!$NoHostWriteBack)
+        {
             Write-Verbose "Writing message back to host"
             Write-MessageToHost -LogEntry $LogEntryString -LogType $LogType
         }
 
         # handle PassThru
-        if ($PassThru) {
+        if ($PassThru)
+        {
             Write-Output $LogEntry
         }
 

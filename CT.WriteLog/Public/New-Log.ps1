@@ -1,4 +1,5 @@
-function New-Log {
+function New-Log
+{
     <#
         .SYNOPSIS
             Creates a new log
@@ -23,7 +24,7 @@ function New-Log {
             Author: CleverTwain
             Date: 4.8.2018
     #>
-    [CmdletBinding(SupportsShouldProcess, ConfirmImpact='Medium', DefaultParameterSetName = 'PlainText')]
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'Medium', DefaultParameterSetName = 'PlainText')]
     param (
         # Create or append to a Plain Text log file
         # Log Entry Example:
@@ -100,26 +101,26 @@ function New-Log {
         # Maximum size of log file.
         [Parameter(
             ParameterSetName = 'PlainText'
-            )]
+        )]
         [Parameter(
             ParameterSetName = 'Minimal'
-            )]
+        )]
         [Parameter(
             ParameterSetName = 'CMTrace'
-            )]
+        )]
         [int64] $MaxLogSize = 5242880, # in bytes, default is 5242880 = 5 MB
 
         # Maximum number of log files to keep. Default is 3. Setting MaxLogFiles to 0 will keep all log files.
         [Parameter(
             ParameterSetName = 'PlainText'
-            )]
+        )]
         [Parameter(
             ParameterSetName = 'Minimal'
-            )]
+        )]
         [Parameter(
             ParameterSetName = 'CMTrace'
-            )]
-        [ValidateRange(0,99)]
+        )]
+        [ValidateRange(0, 99)]
         [int32] $MaxLogFiles = 3,
 
         # Specifies the name of the event log.
@@ -137,7 +138,32 @@ function New-Log {
         # This Event ID will be used when writing to the Windows log, but can be overrided by the Write-Log function.
         [Parameter(
             ParameterSetName = 'EventLog')]
-        [string] $DefaultEventID = '1000',
+        [Alias('DefaultEventID')]
+        [string] $DefaultInformationalEventID = '1000',
+
+        [Parameter(
+            ParameterSetName = 'EventLog')]
+        [string] $DefaultVerboseEventID = '2000',
+
+        [Parameter(
+            ParameterSetName = 'EventLog')]
+        [string] $DefaultDebugEventID = '3000',
+
+        [Parameter(
+            ParameterSetName = 'EventLog')]
+        [string] $DefaultSuccessAuditEventID = '4000',
+
+        [Parameter(
+            ParameterSetName = 'EventLog')]
+        [string] $DefaultWarningEventID = '5000',
+
+        [Parameter(
+            ParameterSetName = 'EventLog')]
+        [string] $DefaultErrorEventID = '6000',
+
+        [Parameter(
+            ParameterSetName = 'EventLog')]
+        [string] $DefaultFailureAuditEventID = '7000',
 
         # When UseLocalVariable is True, the log object is not saved in the global PSLOG variable,
         # otherwise it's returned to the pipeline.
@@ -155,94 +181,120 @@ function New-Log {
         [switch] $IncludeStreamName
     )
 
-    if ($PSCmdlet.ParameterSetName -eq 'EventLog') {
+    if ($PSCmdlet.ParameterSetName -eq 'EventLog')
+    {
         $LogType = 'EventLog'
-    } else {
+    }
+    else
+    {
         $LogType = 'LogFile'
         $LogFormat = $PSCmdlet.ParameterSetName
     }
 
-    if ($LogType -eq 'EventLog') {
+    if ($LogType -eq 'EventLog')
+    {
 
-        if (!$EventLogSource) {
-            if ( (Get-PSCallStack)[1].FunctionName ) {
+        if (!$EventLogSource)
+        {
+            if ( (Get-PSCallStack)[1].FunctionName )
+            {
                 $EventLogSource = (Get-PSCallStack)[1].FunctionName
-            } else {
+            }
+            else
+            {
                 $EventLogSource = (Get-PSCallStack)[1].Command
             }
-            if ($EventLogSource = '<ScriptBlock>') {
+            if ($EventLogSource = '<ScriptBlock>')
+            {
                 $EventLogSource = 'ScriptBlock'
             }
         }
 
-        if ([System.Diagnostics.EventLog]::SourceExists($EventLogSource)) {
-            $AssociatedLog = [System.Diagnostics.EventLog]::LogNameFromSourceName($EventLogSource,".")
+        if ([System.Diagnostics.EventLog]::SourceExists($EventLogSource))
+        {
+            $AssociatedLog = [System.Diagnostics.EventLog]::LogNameFromSourceName($EventLogSource, ".")
 
-            if ($AssociatedLog -ne $EventLogName) {
+            if ($AssociatedLog -ne $EventLogName)
+            {
                 Write-Warning "The eventlog source $EventLogSource is already associated with a different eventlog"
                 $LogType = $null
                 return $null
             }
         }
 
-        try {
-            if (-not([System.Diagnostics.EventLog]::SourceExists($EventLogSource))) {
+        try
+        {
+            if (-not([System.Diagnostics.EventLog]::SourceExists($EventLogSource)))
+            {
 
                 # In order to create a new event log, or add a new source to an existing eventlog,
                 #   the user must be running the command as an administrator.
                 # We are checking for that here
-                $windowsIdentity=[System.Security.Principal.WindowsIdentity]::GetCurrent()
-                $windowsPrincipal=new-object System.Security.Principal.WindowsPrincipal($windowsIdentity)
-                $adm=[System.Security.Principal.WindowsBuiltInRole]::Administrator
-                if ($windowsPrincipal.IsInRole($adm)) {
-                    Remove-Variable -Name Format,MaxLogSize,MaxLogFiles -ErrorAction SilentlyContinue
+                $windowsIdentity = [System.Security.Principal.WindowsIdentity]::GetCurrent()
+                $windowsPrincipal = new-object System.Security.Principal.WindowsPrincipal($windowsIdentity)
+                $adm = [System.Security.Principal.WindowsBuiltInRole]::Administrator
+                if ($windowsPrincipal.IsInRole($adm))
+                {
+                    Remove-Variable -Name Format, MaxLogSize, MaxLogFiles -ErrorAction SilentlyContinue
                     # create new event log if needed
                     New-EventLog -Source $EventLogSource -LogName $EventLogName
                     Write-Verbose "Created new event log (Name: $($EventLogName), Source: $($EventLogSource))"
                 }
 
-                else {
+                else
+                {
                     Write-Warning 'When creating a Windows Event Log you need to run as a user with elevated rights!'
                 }
             }
-            else {
+            else
+            {
                 Write-Verbose "$($EventLogName) exists, skip create new event log."
             }
 
             $logType = 'EventLog'
         }
-        catch {
+        catch
+        {
             Write-Warning $_.Exception.Message
         }
     }
 
-    else {
-        Remove-Variable -Name EventLogName,EventLogSource,DefaultEventID -ErrorAction SilentlyContinue
+    else
+    {
+        Remove-Variable -Name EventLogName, EventLogSource, DefaultEventID -ErrorAction SilentlyContinue
 
         $Counter = 0
         $HaveLog = $false
-        While (-not $HaveLog) {
+        While (-not $HaveLog)
+        {
             $Mutex = New-Object System.Threading.Mutex($false, "LoggingMutex")
             Write-Debug "Requesting mutex to test access to log"
             [void]$Mutex.WaitOne(1000)
             Write-Debug "Received Mutex to test access to log"
-            Try {
+            Try
+            {
                 [io.file]::OpenWrite($Path).close()
                 $HaveLog = $true
             }
-            Catch [System.UnauthorizedAccessException] {
+            Catch [System.UnauthorizedAccessException]
+            {
                 $FileName = $Path.Split("\") | Select-Object -Last 1
                 $Path = "$env:TEMP\$FileName"
                 Write-Warning "Current user does not have permission to write to $Path. Redirecting log to $Path"
                 $HaveLog = $true
-            } Catch {
+            }
+            Catch
+            {
                 $Counter++
                 Write-Debug $_
-            } Finally {
+            }
+            Finally
+            {
                 Write-Debug "Releasing Mutex to access log"
                 [void]$Mutex.ReleaseMutex()
             }
-            if ($Counter -gt 99) {
+            if ($Counter -gt 99)
+            {
                 $HaveLog = $false
                 Write-Error "Unable to obtain lock on file"
                 $logType = $null
@@ -252,18 +304,23 @@ function New-Log {
 
         # create new log file if needed ( we need to re-check if the file exists here because the
         #    path may have changed since we last checked)
-        if((-not $Append) -or (-not(Test-Path $Path))){
+        if ((-not $Append) -or (-not(Test-Path $Path)))
+        {
             Write-Verbose "Log does not currently exist, or we are overwriting an existing log"
-            try {
-                if($Header){
+            try
+            {
+                if ($Header)
+                {
                     Set-Content -Path $Path -Value $Header -Encoding 'UTF8' -Force
                 }
-                else{
+                else
+                {
                     Set-Content -Path $Path -Value $null -Encoding 'UTF8' -Force
                 }
                 Write-Verbose "Created new log file ($($Path))"
             }
-            catch{
+            catch
+            {
                 Write-Warning $_.Exception.Message
             }
         }
@@ -271,52 +328,74 @@ function New-Log {
 
     Write-Verbose "Creating Log Object"
     # create log object
-    switch ($LogType) {
-        'EventLog' {
+    switch ($LogType)
+    {
+        'EventLog'
+        {
+            Write-Verbose 'In EventLog'
             # create log object
             $logObject = [PSCustomObject]@{
-                PSTypeName = 'CT.EventLog'
-                Type = $logType
-                Name = $EventLogName
-                Source = $EventLogSource
-                DefaultEventID = $DefaultEventID
-                IncludeStreamName = $IncludeStreamName
-                HostWriteBack = (!$NoHostWriteBack)
-                MaxLogSize = $MaxLogSize
+                PSTypeName                  = 'CT.EventLog'
+                Type                        = $logType
+                Name                        = $EventLogName
+                Source                      = $EventLogSource
+                DefaultInformationalEventID = $DefaultInformationalEventID
+                DefaultVerboseEventID       = $DefaultVerboseEventID
+                DefaultDebugEventID         = $DefaultDebugEventID
+                DefaultSuccessAuditEventID  = $DefaultSuccessAuditEventID
+                DefaultWarningEventID       = $DefaultWarningEventID
+                DefaultErrorEventID         = $DefaultErrorEventID
+                DefaultFailureAuditEventID  = $DefaultFailureAuditEventID
+                IncludeStreamName           = $IncludeStreamName
+                HostWriteBack               = (!$NoHostWriteBack)
+                MaxLogSize                  = $MaxLogSize
                 # Limit-EventLog
                 # Minimum 64KB Maximum 4GB and must be divisible by 64KB (65536)
-                MaxLogRetention = $MaxLogRetention
+                MaxLogRetention             = $MaxLogRetention
                 # Limit-EventLog
                 # RetentionDays
-                OverflowAction = $OverflowAction
+                OverflowAction              = $OverflowAction
                 # Limit-EventLog
                 # OverwriteOlder, OverwriteAsNeeded, DoNotOverwrite
             }
         }
-        'LogFile' {
+        'LogFile'
+        {
+            Write-Verbose 'In LogFile'
             $logObject = [PSCustomObject]@{
-                PSTypeName = 'CT.LogFile'
-                Type = $logType
-                Path = $Path
-                Format = $LogFormat
-                Header = $Header
+                PSTypeName        = 'CT.LogFile'
+                Type              = $logType
+                Path              = $Path
+                Format            = $LogFormat
+                Header            = $Header
                 IncludeStreamName = $IncludeStreamName
-                HostWriteBack = (!$NoHostWriteBack)
-                MaxLogSize = $MaxLogSize
-                MaxLogFiles = $MaxLogFiles
+                HostWriteBack     = (!$NoHostWriteBack)
+                MaxLogSize        = $MaxLogSize
+                MaxLogFiles       = $MaxLogFiles
             }
         }
-        default {$logObject = $null}
+        default
+        {
+            Write-Verbose 'In default'
+            $logObject = $null
+        }
     }
 
     # Return the log to the pipeline
 
-    if ($UseLocalVariable) {
+    Write-Verbose "Done creating log object"
+    if ($UseLocalVariable)
+    {
         Write-Output $logObject
-    } else {
-        if (Get-Variable PSLog -ErrorAction SilentlyContinue) {
-            Remove-Variable -Name PSLOG
+    }
+    else
+    {
+        if (Get-Variable PSLOG -ErrorAction SilentlyContinue)
+        {
+            Write-Verbose "Trying to remove existing variable"
+            Remove-Variable -Name PSLOG -Scope Global
         }
-        New-Variable -Name PSLOG -Value $logObject -Scope Script
+        Write-Verbose "Returning global PSLog"
+        New-Variable -Name PSLOG -Value $logObject -Scope Global
     }
 }
