@@ -1,5 +1,5 @@
 node {
     echo 'Hello World'
     powershell 'Write-Output "Hello, World!"'
-    powershell 'Get-ChildItem'
+    powershell 'Write-Output (Get-ChildItem)'
 }
